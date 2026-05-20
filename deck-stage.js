@@ -42,37 +42,13 @@
       justify-content: center;
     }
 
-    /* ── Mobile: zoom + scroll — works portrait AND landscape ── */
+    /* ── Mobile: always show nav overlay ── */
     @media (max-width: 1024px) {
-      :host {
-        overflow: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-      }
-      :host::-webkit-scrollbar { display: none; }
-      .stage {
-        position: relative;
-        overflow: visible;
-        align-items: flex-start;
-        justify-content: flex-start;
-        width: max-content;
-        height: max-content;
-        min-width: 100%;
-        min-height: 100%;
-      }
-      .canvas {
-        position: relative !important;
-        flex-shrink: 0;
-        transform: none !important;
-      }
-      .tapzones { display: none !important; }
       .overlay {
         opacity: 1 !important;
         pointer-events: auto !important;
         transform: translate(-50%, 0) scale(1) !important;
         filter: blur(0) !important;
-        bottom: 16px;
-        position: fixed;
       }
     }
 
@@ -503,23 +479,9 @@
       }
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const isMobile = Math.min(vw, vh) < 700;
-
-      if (isMobile) {
-        // Scale so the long edge of the device fills the long edge of the slide.
-        // In landscape: fills viewport width, small vertical overflow → vertical scroll.
-        // In portrait: fills viewport height, wide overflow → horizontal scroll.
-        const longEdge = Math.max(vw, vh);
-        const s = longEdge / this.designWidth;
-        this._canvas.style.transform = 'none';
-        this._canvas.style.zoom = String(s);
-        this._canvas.style.width = this.designWidth + 'px';
-        this._canvas.style.height = this.designHeight + 'px';
-      } else {
-        this._canvas.style.zoom = '';
-        const s = Math.min(vw / this.designWidth, vh / this.designHeight);
-        this._canvas.style.transform = `scale(${s})`;
-      }
+      this._canvas.style.zoom = '';
+      const s = Math.min(vw / this.designWidth, vh / this.designHeight);
+      this._canvas.style.transform = `scale(${s})`;
     }
 
     _onTouchStart(e) {
