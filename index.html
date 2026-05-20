@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Locully — Are You On ChatGPT?</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #14213d;
+    --ink-2: #1f2c4f;
+    --ink-soft: #4a5474;
+    --paper: #f5f1ea;
+    --paper-2: #efe9de;
+    --rule: #d9d2c4;
+    --accent: #e26a2c;
+    --accent-deep: #c2521a;
+    --accent-soft: #f4d4be;
+  }
+  html, body { background: #0a0d18; margin: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; color: var(--ink); }
+
+  deck-stage > section {
+    width: 1920px; height: 1080px;
+    background: var(--paper);
+    color: var(--ink);
+    position: relative;
+    overflow: hidden;
+    font-family: 'Inter', system-ui, sans-serif;
+    box-sizing: border-box;
+  }
+
+  /* ---- shared ---- */
+  .display { font-family: 'Inter Tight', sans-serif; font-weight: 600; letter-spacing: -0.025em; line-height: 0.98; color: var(--ink); }
+  .mono { font-family: 'IBM Plex Mono', monospace; font-weight: 400; letter-spacing: 0; }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 24px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--accent-deep);
+  }
+  .accent { color: var(--accent); }
+  .ink-soft { color: var(--ink-soft); }
+
+  .chrome-top, .chrome-bot {
+    position: absolute; left: 80px; right: 80px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 24px;
+    color: var(--ink-soft);
+    z-index: 5;
+    white-space: nowrap;
+  }
+  .chrome-top { top: 60px; }
+  .chrome-bot { bottom: 60px; }
+  .logo {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: 'Inter Tight', sans-serif; font-weight: 600;
+    font-size: 26px; color: var(--ink); letter-spacing: -0.01em;
+  }
+  .logo-mark {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--ink);
+    position: relative;
+  }
+  .logo-mark::after {
+    content: ''; position: absolute; inset: 7px;
+    border-radius: 50%; background: var(--accent);
+  }
+  .pill {
+    display: inline-block;
+    padding: 10px 20px;
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 24px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink);
+    white-space: nowrap;
+    align-self: flex-start;
+    flex-shrink: 0;
+    line-height: 1.2;
+  }
+  .rule { height: 1px; background: var(--rule); width: 100%; }
+
+  /* ===================== SLIDE 1: COVER ===================== */
+  .s-cover { padding: 60px 80px; }
+  .s-cover .hero {
+    position: absolute; left: 80px; right: 80px; bottom: 120px;
+  }
+  .s-cover h1 {
+    font-family: 'Inter Tight', sans-serif;
+    font-weight: 600;
+    font-size: 240px;
+    line-height: 0.86;
+    letter-spacing: -0.04em;
+    margin: 0;
+    color: var(--ink);
+  }
+  .s-cover h1 em {
+    font-style: italic;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .s-cover .subhero {
+    margin-top: 56px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+    align-items: end;
+  }
+  .s-cover .lede {
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 32px; line-height: 1.25;
+    color: var(--ink-2); max-width: 640px;
+    font-weight: 400;
+  }
+  .s-cover .meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 24px; color: var(--ink-soft);
+    text-align: right;
+    line-height: 1.6;
+  }
+  .s-cover .meta b { color: var(--ink); font-weight: 500; }
+
+  .blink-cursor {
+    display: inline-block;
+    width: 0.55ch; height: 0.85em;
+    background: var(--accent);
+    margin-left: 0.08em;
+    vertical-align: -0.06em;
+    animation: blink 1.05s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ===================== SLIDE 2: THE SHIFT ===================== */
+  .s-shift { padding: 60px 80px; display: grid; grid-template-rows: auto 1fr; }
+  .s-shift .head { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 60px; }
+  .s-shift h2 {
+    font-family: 'Inter Tight', sans-serif;
+    font-weight: 600; font-size: 60px; line-height: 1.0;
+    letter-spacing: -0.025em; margin: 16px 0 0;
+    max-width: 1100px;
+  }
+  .s-shift h2 em { font-style: italic; font-weight: 500; color: var(--accent); }
+  .s-shift .compare {
+    margin-top: 64px;
+    display: grid; grid-template-columns: 1fr 80px 1fr; gap: 0; align-items: stretch;
+  }
+  .panel {
+    border: 1px solid var(--rule);
+    background: #fff;
+    padding: 36px;
+    display: flex; flex-direction: column;
+    min-height: 400px;
+    position: relative;
+  }
+  .panel.before { background: var(--paper-2); }
+  .panel .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px; text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--ink-soft); margin-bottom: 28px;
+  }
+  .panel.after .label { color: var(--accent-deep); }
+  .panel h3 {
+    font-family: 'Inter Tight', sans-serif;
+    font-weight: 600; font-size: 32px; line-height: 1.05;
+    letter-spacing: -0.02em; margin: 0 0 24px;
+  }
+  .arrow {
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-soft);
+  }
+  .arrow svg { width: 48px; height: 48px; }
+
+  .serp-mock { font-family: 'Inter', sans-serif; font-size: 18px; color: var(--ink-2); }
+  .serp-row { padding: 10px 0; border-bottom: 1px dashed var(--rule); display: flex; gap: 16px; align-items: baseline; }
+  .serp-row:last-child { border-bottom: 0; }
+  .serp-row .n { font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: var(--ink-soft); width: 28px; }
+  .serp-row .t { color: #1a4ec9; text-decoration: underline; text-underline-offset: 3px; }
+  .serp-row .d { color: var(--ink-soft); font-size: 15px; }
+
+  .gpt-mock {
+    background: #faf6ef;
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 28px 30px;
+    font-size: 19px; line-height: 1.5; color: var(--ink-2);
+  }
+  .gpt-mock .q { font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: var(--ink-soft); margin-bottom: 16px; }
+  .gpt-mock .a strong { background: var(--accent-soft); padding: 1px 6px; border-radius: 3px; color: var(--ink); font-weight: 600; }
+  .gpt-mock .cite { margin-top: 18px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--accent-deep); }
+
+  /* ===================== SLIDE 3: STAKES (data) ===================== */
+  .s-stakes { padding: 60px 80px; }
+  .s-stakes .head { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 60px; }
+  .s-stakes h2 {
+    font-family: 'Inter Tight', sans-serif;
+    font-weight: 600; font-size: 56px; line-height: 1.02;
+    letter-spacing: -0.025em; margin: 16px 0 0;
+    max-width: 1500px;
+  }
+  .s-stakes .grid {
+    margin-top: 48px;
+    display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 64px;
+  }
+  .stat-block { border-top: 1px solid var(--ink); padding-top: 28px; }
+  .stat-block .num {
+    font-family: 'Inter Tight', sans-serif;
+    font-weight: 600; font-size: 110px;
+    line-height: 0.85; letter-spacing: -0.05em;
+    color: var(--ink);
+    display: flex; align-items: baseline; gap: 4px;
+  }
+  .stat-block .num .pct { color: var(--accent); }
+  .stat-block .cap {
+    margin-top: 18px;
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 26px; line-height: 1.25;
+    color: var(--ink-2); max-width: 540px;
+    font-weight: 500;
+  }
+  .stat-block .src {
+    margin-top: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 24px; color: var(--ink-soft);
+  }
+
+  /* bar chart */
+  .chart-wrap {
+    border: 1px solid var(--rule);
+    background: #fff;
+    padding: 48px;
+    display: flex; flex-direction: column; gap: 28px;
+  }
+  .chart-wrap .ct {
+    font-family: 'IBM Plex Mono', monospace; font-size: 14px;
+    text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-soft);
+  }
+  .chart-wrap h4 {
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 28px; font-weight: 600;
+    margin: 0; line-height: 1.2;
+    color: var(--ink);
+  }
+  .bars { display: flex; flex-direction: column; gap: 18px; margin-top: 8px; }
+  .bar-row { display: grid; grid-template-columns: 200px 1fr 80px; gap: 20px; align-items: center; }
+  .bar-row .lbl { font-family: 'Inter Tight', sans-serif; font-size: 19px; font-weight: 500; color: var(--ink-2); }
+  .bar { height: 28px; background: var(--paper-2); position: relative; border-radius: 2px; }
+  .bar > span { position: absolute; inset: 0 auto 0 0; background: var(--ink); border-radius: 2px; }
+  .bar.acc > span { background: var(--accent); }
+  .bar-row .val { font-family: 'IBM Plex Mono', monospace; font-size: 18px; color: var(--ink); text-align: right; }
+
+  /* ===================== SLIDE 4: OPPORTUNITY ===================== */
+  .s-opp { padding: 60px 80px; }
+  .s-opp .head { display: flex; justify-content: space-between; margin-top: 60px; align-items: flex-start; }
+  .s-opp h2 {
+    font-family: 'Inter Tight', sans-serif;
+    font-weight: 600; font-size: 56px; line-height: 1.02;
+    letter-spacing: -0.025em; margin: 16px 0 0; max-width: 1500px;
+  }
+  .s-opp h2 em { font-style: italic; font-weight: 500; color: var(--accent); }
+  .s-opp .body {
+    margin-top: 48px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 64px;
+    align-items: start;
+  }
+  .conv-viz {
+    background: #fff; border: 1px solid var(--rule);
+    padding: 48px; height: 560px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    position: relative;
+  }
+  .conv-viz .yaxis {
+    position: absolute; left: 24px; top: 56px; bottom: 90px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-soft);
+  }
+  .conv-bars {
+    flex: 1;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: end;
+    padding-left: 70px;
+    margin-bottom: 24px;
+  }
+  .conv-col { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .conv-bar {
+    width: 140px;
+    background: var(--ink);
+    position: relative;
+  }
+  .conv-bar.acc { background: var(--accent); }
+  .conv-bar .top-num {
+    position: absolute; left: 50%; top: -56px; transform: translateX(-50%);
+    font-family: 'Inter Tight', sans-serif; font-weight: 600;
+    font-size: 56px; letter-spacing: -0.03em; white-space: nowrap;
+    color: var(--ink);
+  }
+  .conv-bar.acc .top-num { color: var(--accent); }
+  .conv-foot {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px; padding-left: 70px;
+    border-top: 1px solid var(--rule); padding-top: 18px;
+  }
+  .conv-foot div { text-align: center; font-family: 'Inter', sans-serif; font-size: 17px; color: var(--ink-2); }
+  .conv-foot div b { display: block; font-family: 'Inter Tight', sans-serif; font-size: 20px; color: var(--ink); font-weight: 600; }
+
+  .opp-text { display: flex; flex-direction: column; gap: 36px; padding-top: 8px; }
+  .opp-text p {
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 32px; line-height: 1.32;
+    margin: 0; color: var(--ink-2); font-weight: 400;
+  }
+  .opp-text p strong { font-weight: 600; color: var(--ink); }
+  .opp-quote {
+    border-left: 4px solid var(--accent);
+    padding: 4px 0 4px 28px;
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 26px; line-height: 1.4; font-style: italic;
+    color: var(--ink); font-weight: 400;
+  }
+  .opp-quote cite {
+    display: block; margin-top: 14px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 14px;
+    font-style: normal; color: var(--ink-soft);
+    text-transform: uppercase; letter-spacing: 0.12em;
+  }
+
+  /* ===================== SLIDE 5: APPROACH ===================== */
+  .s-approach { padding: 60px 80px; }
+  .s-approach .head { margin-top: 60px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .s-approach h2 {
+    font-family: 'Inter Tight', sans-serif;
+    font-weight: 600; font-size: 80px; line-height: 0.96;
+    letter-spacing: -0.03em; margin: 24px 0 0; max-width: 1400px;
+  }
+  .s-approach h2 em { font-style: italic; font-weight: 500; color: var(--accent); }
+  .formula {
+    margin-top: 56px;
+    background: #fff; border: 1px solid var(--rule);
+    padding: 48px; display: flex; align-items: center; justify-content: space-between;
+    gap: 32px;
+  }
+  .formula-piece { text-align: center; flex: 1; }
+  .formula-piece .pn {
+    font-family: 'Inter Tight', sans-serif; font-weight: 600;
+    font-size: 110px; letter-spacing: -0.04em; line-height: 1;
+    color: var(--ink);
+  }
+  .formula-piece.acc .pn { color: var(--accent); }
+  .formula-piece .pl {
+    font-family: 'IBM Plex Mono', monospace; font-size: 16px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--ink-soft); margin-top: 18px;
+  }
+  .formula-piece .pd {
+    font-family: 'Inter Tight', sans-serif; font-size: 22px; line-height: 1.35;
+    color: var(--ink-2); margin-top: 14px; font-weight: 500;
+  }
+  .formula-op {
+    font-family: 'Inter Tight', sans-serif; font-weight: 400;
+    font-size: 100px; color: var(--ink-soft);
+    line-height: 1;
+  }
+
+  .pillars {
+    margin-top: 48px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+  }
+  .pillar {
+    border-top: 1px solid var(--ink);
+    padding-top: 24px;
+  }
+  .pillar .pn {
+    font-family: 'IBM Plex Mono', monospace; font-size: 14px;
+    color: var(--accent-deep); letter-spacing: 0.14em;
+  }
+  .pillar h4 {
+    margin: 18px 0 10px;
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 28px; line-height: 1.15; font-weight: 600;
+    letter-spacing: -0.01em; color: var(--ink);
+  }
+  .pillar p {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px; line-height: 1.45; color: var(--ink-soft);
+  }
+
+  /* ===================== SLIDE 6: PROOF ===================== */
+  .s-proof { padding: 60px 80px; background: var(--ink); color: var(--paper); }
+  .s-proof .chrome-top, .s-proof .chrome-bot { color: rgba(245,241,234,0.5); }
+  .s-proof .logo { color: var(--paper); }
+  .s-proof .logo-mark { background: var(--paper); }
+  .s-proof .pill { border-color: var(--paper); color: var(--paper); }
+  .s-proof .eyebrow { color: var(--accent); }
+  .s-proof .head { margin-top: 60px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .s-proof h2 {
+    font-family: 'Inter Tight', sans-serif;
+    font-weight: 600; font-size: 56px; line-height: 1.02;
+    letter-spacing: -0.025em; margin: 16px 0 0; color: var(--paper);
+    max-width: 1500px;
+  }
+  .s-proof h2 em { font-style: italic; font-weight: 500; color: var(--accent); }
+
+  .proof-grid {
+    margin-top: 40px;
+    display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 24px;
+  }
+  .pcard {
+    border: 1px solid rgba(245,241,234,0.18);
+    padding: 32px; min-height: 320px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    background: rgba(255,255,255,0.02);
+    gap: 16px;
+  }
+  .pcard .lbl {
+    font-family: 'IBM Plex Mono', monospace; font-size: 14px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: rgba(245,241,234,0.55);
+    margin-bottom: 4px;
+  }
+  .pcard .big {
+    font-family: 'Inter Tight', sans-serif; font-weight: 600;
+    font-size: 100px; line-height: 0.9; letter-spacing: -0.04em;
+    color: var(--paper);
+  }
+  .pcard .big .acc { color: var(--accent); }
+  .pcard .big.small { font-size: 76px; }
+  .pcard .cap {
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 19px; line-height: 1.35; color: rgba(245,241,234,0.85);
+    font-weight: 500;
+  }
+
+  /* growth viz in left card */
+  .growth {
+    display: flex; align-items: end; gap: 32px;
+    margin: 32px 0 8px;
+    height: 180px;
+  }
+  .growth-col { display: flex; flex-direction: column; align-items: center; gap: 14px; flex: 1; }
+  .growth-bar { width: 100%; background: rgba(245,241,234,0.2); position: relative; }
+  .growth-bar.acc { background: var(--accent); }
+  .growth-bar .vlabel {
+    position: absolute; left: 50%; top: -60px; transform: translateX(-50%);
+    font-family: 'Inter Tight', sans-serif; font-size: 32px; font-weight: 600;
+    color: var(--paper); letter-spacing: -0.02em;
+  }
+  .growth-bar.acc .vlabel { color: var(--accent); }
+  .growth-col .glabel {
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+    color: rgba(245,241,234,0.6); text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .arrow-up {
+    font-family: 'Inter Tight', sans-serif; font-weight: 600;
+    color: var(--accent); font-size: 22px;
+  }
+
+  .proof-quote {
+    grid-column: 1 / -1;
+    margin-top: 12px;
+    border-top: 1px solid rgba(245,241,234,0.2);
+    padding-top: 16px;
+    display: grid; grid-template-columns: 1fr auto; gap: 60px; align-items: end;
+  }
+  .proof-quote .q {
+    font-family: 'Inter Tight', sans-serif;
+    font-style: italic; font-size: 20px; line-height: 1.3;
+    color: var(--paper); max-width: 1300px; font-weight: 400;
+  }
+  .proof-quote .src {
+    font-family: 'IBM Plex Mono', monospace; font-size: 14px;
+    color: rgba(245,241,234,0.6); text-transform: uppercase; letter-spacing: 0.14em;
+    text-align: right; line-height: 1.7;
+  }
+
+  /* ===================== SLIDE 7: CTA ===================== */
+  .s-cta { padding: 60px 80px; }
+  .s-cta .center {
+    position: absolute; inset: 60px 80px 60px 80px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .s-cta .ask {
+    font-family: 'Inter Tight', sans-serif; font-weight: 600;
+    font-size: 200px; line-height: 0.92; letter-spacing: -0.04em;
+    color: var(--ink); margin: 0;
+  }
+  .s-cta .ask em { font-style: italic; font-weight: 500; color: var(--accent); }
+  .s-cta .ask .q { color: var(--accent); }
+  .s-cta .row {
+    margin-top: 80px;
+    display: grid; grid-template-columns: 1.4fr 1fr; gap: 64px; align-items: end;
+  }
+  .s-cta .lede {
+    font-family: 'Inter Tight', sans-serif; font-size: 32px; line-height: 1.3;
+    color: var(--ink-2); max-width: 880px; font-weight: 400;
+  }
+  .s-cta .next {
+    border: 1px solid var(--ink); padding: 32px 36px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .s-cta .next .lbl {
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+    text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-soft);
+  }
+  .s-cta .next .v {
+    font-family: 'Inter Tight', sans-serif; font-size: 32px; font-weight: 600;
+    line-height: 1.1; color: var(--ink); letter-spacing: -0.02em;
+  }
+  .s-cta .next .v.small { font-size: 22px; font-weight: 500; }
+  .s-cta .footer-meta {
+    position: absolute; left: 80px; right: 80px; bottom: 60px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: var(--ink-soft);
+  }
+
+  /* prompt-style decoration on CTA */
+  .prompt-bar {
+    margin-top: 36px;
+    display: flex; align-items: center; gap: 20px;
+    background: #fff; border: 1px solid var(--rule);
+    padding: 22px 28px; border-radius: 14px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 22px;
+    color: var(--ink-soft);
+    max-width: 980px;
+  }
+  .prompt-bar .chev { color: var(--accent); }
+  .prompt-bar .typed { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<deck-stage>
+
+  <!-- ============== SLIDE 1: COVER ============== -->
+  <section class="s-cover" data-screen-label="01 Cover">
+    <div class="chrome-top">
+      <div class="logo"><span class="logo-mark"></span>Locully</div>
+      <div>AI Search Visibility · 2026</div>
+    </div>
+
+    <div class="hero">
+      <div class="eyebrow" style="margin-bottom: 32px;">A Sales Brief for Owner-Operators</div>
+      <h1>Are you on<br/><em>ChatGPT</em>?<span class="blink-cursor"></span></h1>
+      <div class="subhero">
+        <div class="lede">
+          Your customers stopped Googling. They're asking AI where to eat, where to stay, who to book — and listening to the answer.
+        </div>
+        <div class="meta">
+          <b>LOCULLY.ORG</b><br/>
+          AI Optimization for<br/>
+          Thailand Health &amp; Wellness Businesses<br/>
+          <span style="opacity:.6">— v1, May 2026</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-bot">
+      <div>01 / 09</div>
+      <div>Confidential — for client review</div>
+    </div>
+  </section>
+
+  <!-- ============== SLIDE 2: THE SHIFT ============== -->
+  <section class="s-shift" data-screen-label="02 The Shift">
+    <div class="chrome-top">
+      <div class="logo"><span class="logo-mark"></span>Locully</div>
+      <div>02 — The shift</div>
+    </div>
+
+    <div class="head">
+      <div>
+        <div class="eyebrow">The shift</div>
+        <h2>Search used to give you ten links.<br/>Now it gives you <em>one answer.</em></h2>
+      </div>
+      <div class="pill">Then → Now</div>
+    </div>
+
+    <div class="compare">
+      <div class="panel before">
+        <div class="label">2019 — Ten blue links</div>
+        <h3>"Best Italian restaurant near me"</h3>
+        <div class="serp-mock">
+          <div class="serp-row"><span class="n">01</span><div><div class="t">Trattoria Marco — TripAdvisor</div><div class="d">Top-rated Italian in Soho. Reservations…</div></div></div>
+          <div class="serp-row"><span class="n">02</span><div><div class="t">The 15 Best Italian Spots — Eater</div><div class="d">Our editors pick this season's must-visits…</div></div></div>
+          <div class="serp-row"><span class="n">03</span><div><div class="t">Yelp: Italian, Open Now</div><div class="d">Filter by price, rating, distance…</div></div></div>
+          <div class="serp-row"><span class="n">04</span><div><div class="t">Reddit — r/FoodNYC</div><div class="d">Locals weigh in on the best red sauce…</div></div></div>
+        </div>
+      </div>
+
+      <div class="arrow">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M8 24 H40 M30 14 L40 24 L30 34"/>
+        </svg>
+      </div>
+
+      <div class="panel after">
+        <div class="label">2026 — One recommendation</div>
+        <h3>"Best Italian restaurant near me"</h3>
+        <div class="gpt-mock">
+          <div class="q">▌ ChatGPT</div>
+          <div class="a">For dinner tonight in Soho, I'd recommend <strong>Trattoria Marco</strong> — it's known for handmade pasta and a quiet back room, and consistently shows up as a local favorite. They take reservations and are open until 11.</div>
+          <div class="cite">Cited: trattoriamarco.com · eater.com</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-bot">
+      <div>02 / 09</div>
+      <div>Source: ChatGPT, Google AI Overviews, Perplexity user behavior</div>
+    </div>
+  </section>
+
+  <!-- ============== SLIDE 3: STAKES (data) ============== -->
+  <section class="s-stakes" data-screen-label="03 The Stakes">
+    <div class="chrome-top">
+      <div class="logo"><span class="logo-mark"></span>Locully</div>
+      <div>03 — The stakes</div>
+    </div>
+
+    <div class="head" style="display: block;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="eyebrow">The stakes</div>
+        <div class="pill">Zero-click reality</div>
+      </div>
+      <h2>If you're not the answer, you're not in the room.</h2>
+    </div>
+
+    <div class="grid">
+      <div>
+        <div class="stat-block">
+          <div class="num">60<span class="pct">%</span></div>
+          <div class="cap">of AI searches end without a single click to any website.</div>
+          <div class="src">Source — AI Search behavioral research, 2025</div>
+        </div>
+        <div class="stat-block" style="margin-top: 32px;">
+          <div class="num">~25<span class="pct">%</span></div>
+          <div class="cap">of Google results pages now show an AI Overview above the fold — pushing organic listings down.</div>
+          <div class="src">Source — Google SERP analysis, 2025</div>
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <div>
+          <div class="ct">Real traffic delivered by Google rank #1</div>
+          <h4>Your #1 ranking is worth less every year.</h4>
+        </div>
+        <div class="bars">
+          <div class="bar-row">
+            <div class="lbl">2019</div>
+            <div class="bar"><span style="width: 92%"></span></div>
+            <div class="val">100%</div>
+          </div>
+          <div class="bar-row">
+            <div class="lbl">2021</div>
+            <div class="bar"><span style="width: 78%"></span></div>
+            <div class="val">85%</div>
+          </div>
+          <div class="bar-row">
+            <div class="lbl">2023</div>
+            <div class="bar"><span style="width: 58%"></span></div>
+            <div class="val">63%</div>
+          </div>
+          <div class="bar-row">
+            <div class="lbl">2025</div>
+            <div class="bar acc"><span style="width: 38%"></span></div>
+            <div class="val">41%</div>
+          </div>
+          <div class="bar-row">
+            <div class="lbl">2026 (proj.)</div>
+            <div class="bar acc"><span style="width: 28%"></span></div>
+            <div class="val">~30%</div>
+          </div>
+        </div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--ink-soft); border-top: 1px solid var(--rule); padding-top: 16px;">
+          AI Overviews, ad blocks, video carousels &amp; PAA expansions push the #1 organic link below the fold.<br/>
+          A #1 today drives less traffic than a #3 did two years ago.
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-bot">
+      <div>03 / 09</div>
+      <div>Locully · Sales Brief</div>
+    </div>
+  </section>
+
+  <!-- ============== SLIDE 4: OPPORTUNITY ============== -->
+  <section class="s-opp" data-screen-label="04 The Opportunity">
+    <div class="chrome-top">
+      <div class="logo"><span class="logo-mark"></span>Locully</div>
+      <div>04 — The opportunity</div>
+    </div>
+
+    <div class="head">
+      <div>
+        <div class="eyebrow">The opportunity</div>
+        <h2>AI traffic is smaller —<br/>and <em>far</em> more profitable.</h2>
+      </div>
+      <div class="pill">High intent</div>
+    </div>
+
+    <div class="body">
+      <div class="conv-viz">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div>
+            <div class="ct mono" style="font-size: 14px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.14em;">Booking conversion rate</div>
+            <h4 style="font-family: 'Inter Tight'; font-size: 26px; margin: 8px 0 0; font-weight: 600;">A visitor from ChatGPT vs. Google</h4>
+          </div>
+          <div class="mono" style="font-size: 13px; color: var(--ink-soft);">% of visits → bookings</div>
+        </div>
+
+        <div style="position: relative; flex: 1; display: flex; align-items: end; padding: 60px 0 0;">
+          <div class="yaxis" style="position: absolute; left: 0; top: 60px; bottom: 0; height: auto; display: flex; flex-direction: column-reverse; justify-content: space-between;">
+            <span>0%</span><span>10%</span><span>20%</span><span>30%</span>
+          </div>
+          <div class="conv-bars" style="height: 100%; padding: 0 20px 0 70px; gap: 80px;">
+            <div class="conv-col">
+              <div class="conv-bar" style="height: 36px;">
+                <div class="top-num">2.7%</div>
+              </div>
+            </div>
+            <div class="conv-col">
+              <div class="conv-bar acc" style="height: 360px;">
+                <div class="top-num">25–30%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="conv-foot">
+          <div><b>Google organic</b>industry average</div>
+          <div><b>ChatGPT referral</b>Locully client average</div>
+        </div>
+      </div>
+
+      <div class="opp-text">
+        <p>When ChatGPT names you, the visitor isn't comparison-shopping. They've already <strong>made the decision</strong> and they're confirming the choice the AI just made for them.</p>
+        <p>That's why a single AI mention is worth roughly <strong>10× a Google click</strong> in real revenue terms.</p>
+        <div class="opp-quote">
+          "Just sold a treatment to an Arab woman who told me ChatGPT referred her to us."
+          <cite>— Locully client, WhatsApp message</cite>
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-bot">
+      <div>04 / 09</div>
+      <div>Locully · Sales Brief</div>
+    </div>
+  </section>
+
+  <!-- ============== SLIDE 5: APPROACH ============== -->
+  <section class="s-approach" data-screen-label="05 The Approach">
+    <div class="chrome-top">
+      <div class="logo"><span class="logo-mark"></span>Locully</div>
+      <div>05 — Our approach</div>
+    </div>
+
+    <div class="head" style="display: flex; justify-content: space-between;">
+      <div>
+        <div class="eyebrow">The approach</div>
+        <h2>AIO isn't a dark art.<br/>It's <em>SEO, recalibrated.</em></h2>
+      </div>
+      <div class="pill">90 / 10</div>
+    </div>
+
+    <div class="formula">
+      <div class="formula-piece">
+        <div class="pn">90<span style="font-size: 0.6em; color: var(--ink-soft); margin-left: 4px;">%</span></div>
+        <div class="pl">Foundation</div>
+        <div class="pd">Disciplined, technical SEO done properly — schema, crawlability, authority, local signals.</div>
+      </div>
+      <div class="formula-op">+</div>
+      <div class="formula-piece acc">
+        <div class="pn">10<span style="font-size: 0.6em; color: var(--accent-deep); margin-left: 4px;">%</span></div>
+        <div class="pl">AI tweaks</div>
+        <div class="pd">Content structured the way LLMs actually lift it — direct answers, clear entity facts, citation-ready prose.</div>
+      </div>
+      <div class="formula-op">=</div>
+      <div class="formula-piece">
+        <div class="pn">AIO</div>
+        <div class="pl">The selected source</div>
+        <div class="pd">Cited by ChatGPT, summarized by Google AI Overviews, recommended by Perplexity.</div>
+      </div>
+    </div>
+
+    <div class="pillars">
+      <div class="pillar">
+        <div class="pn">01 — AUDIT</div>
+        <h4>Visibility baseline</h4>
+        <p>We benchmark how often you appear across ChatGPT, Gemini, AI Overviews and Perplexity for the prompts your customers actually ask.</p>
+      </div>
+      <div class="pillar">
+        <div class="pn">02 — STRUCTURE</div>
+        <h4>Content rebuilt for AI</h4>
+        <p>Pages restructured with schema, direct-answer paragraphs, and entity facts AI engines can lift cleanly into a reply.</p>
+      </div>
+      <div class="pillar">
+        <div class="pn">03 — AUTHORITY</div>
+        <h4>Trusted source signals</h4>
+        <p>Coverage on the third-party sites AI engines already trust — review platforms, local press, category directories.</p>
+      </div>
+      <div class="pillar">
+        <div class="pn">04 — TRACK</div>
+        <h4>Mentions, not rankings</h4>
+        <p>A monthly dashboard of AI mentions, citations, and competitive share — so growth is measured, not assumed.</p>
+      </div>
+    </div>
+
+    <div class="chrome-bot">
+      <div>05 / 09</div>
+      <div>Locully · Sales Brief</div>
+    </div>
+  </section>
+
+  <!-- ============== SLIDE 6: PROOF ============== -->
+  <section class="s-proof" data-screen-label="06 Proof">
+    <div class="chrome-top">
+      <div class="logo"><span class="logo-mark"></span>Locully</div>
+      <div>06 — Proof</div>
+    </div>
+
+    <div class="head" style="display: flex; justify-content: space-between;">
+      <div>
+        <div class="eyebrow">Proof</div>
+        <h2>What happens when a client<br/>becomes <em>the answer.</em></h2>
+      </div>
+      <div class="pill">Client results · 2025</div>
+    </div>
+
+    <div class="proof-grid">
+      <div class="pcard">
+        <div class="lbl">AI mentions / month</div>
+        <div class="growth">
+          <div class="growth-col">
+            <div class="growth-bar" style="height: 24px;"><div class="vlabel">15</div></div>
+            <div class="glabel">Before</div>
+          </div>
+          <div class="arrow-up">→ 7.5×</div>
+          <div class="growth-col">
+            <div class="growth-bar acc" style="height: 160px;"><div class="vlabel">112</div></div>
+            <div class="glabel">After 90 days</div>
+          </div>
+        </div>
+        <div class="cap">From near-invisible to consistently cited across ChatGPT, Gemini and Google AI Overviews.</div>
+      </div>
+
+      <div class="pcard">
+        <div class="lbl">ChatGPT referral traffic</div>
+        <div class="big"><span class="acc">+250</span><span style="font-size: 0.55em;">%</span></div>
+        <div class="cap">Net-new visitors arriving from ChatGPT, pre-qualified and ready to book.</div>
+      </div>
+
+      <div class="pcard">
+        <div class="lbl">Booking conversion</div>
+        <div class="big small">1 in <span class="acc">4</span></div>
+        <div class="cap">ChatGPT-referred sessions converted to a consultation — vs. ~1 in 37 from organic search.</div>
+      </div>
+
+      <div class="proof-quote">
+        <div class="q">"It wasn't about rankings. It was about being <em style="color: var(--accent); font-style: normal; font-weight: 600;">selected.</em> And when a client is selected, the people who arrive are already half-sold."</div>
+        <div class="src">Sunny Sakchiraphong<br/>Founder, Locully</div>
+      </div>
+    </div>
+
+    <div class="chrome-bot">
+      <div>06 / 09</div>
+      <div>Pure organic AIO. No paid spend.</div>
+    </div>
+  </section>
+
+  <!-- ============== SLIDE 7: VIDEO TESTIMONIAL ============== -->
+  <section class="s-testimonials" data-screen-label="07 Testimonials">
+    <div class="chrome-top">
+      <div class="logo"><span class="logo-mark"></span>Locully</div>
+      <div>07 — What clients say</div>
+    </div>
+
+    <div style="position: absolute; inset: 0; display: flex; flex-direction: column; padding: 130px 80px 100px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px;">
+        <div>
+          <div class="eyebrow">Video testimonial</div>
+          <h2 style="font-family: 'Inter Tight', sans-serif; font-weight: 600; font-size: 52px; line-height: 1.05; letter-spacing: -0.025em; margin: 14px 0 0; color: var(--ink);">
+            Hear it from a client.
+          </h2>
+        </div>
+        <div class="pill">Verified · Senja</div>
+      </div>
+
+      <div style="flex: 1; display: flex; align-items: center; justify-content: center;">
+        <div style="width: 640px; height: 640px; background: #fff; border: 1px solid var(--rule); overflow: hidden; flex-shrink: 0;">
+          <div class="senja-embed" data-id="e78045b1-0c17-4032-ae66-d945b9ace7b2" data-mode="shadow" data-lazyload="false" style="display: block; width: 100%; height: 100%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-bot">
+      <div>07 / 09</div>
+      <div>Locully · Sales Brief</div>
+    </div>
+  </section>
+
+  <!-- ============== SLIDE 8: WRITTEN REVIEWS ============== -->
+  <section class="s-reviews" data-screen-label="08 Reviews">
+    <div class="chrome-top">
+      <div class="logo"><span class="logo-mark"></span>Locully</div>
+      <div>08 — Client reviews</div>
+    </div>
+
+    <div style="position: absolute; inset: 0; display: flex; flex-direction: column; padding: 130px 80px 100px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 44px;">
+        <div>
+          <div class="eyebrow">Client reviews</div>
+          <h2 style="font-family: 'Inter Tight', sans-serif; font-weight: 600; font-size: 52px; line-height: 1.05; letter-spacing: -0.025em; margin: 14px 0 0; color: var(--ink);">
+            What they wrote — <em style="font-style: italic; font-weight: 500; color: var(--accent);">unprompted.</em>
+          </h2>
+        </div>
+        <div class="pill">5-star · Google</div>
+      </div>
+
+      <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;">
+        <img src="review-by-vincent-d.png"
+             alt="5-star review by Vincent D, Managing Director — excellent job getting us on ChatGPT"
+             style="width: 100%; max-height: 620px; object-fit: contain; object-position: center; border-radius: 10px; display: block;" />
+        <img src="review-by-phakjira.png"
+             alt="5-star review by Phakjira, Owner Indian Restaurant — game changer for visibility and growth"
+             style="width: 100%; max-height: 620px; object-fit: contain; object-position: center; border-radius: 10px; display: block;" />
+      </div>
+    </div>
+
+    <div class="chrome-bot">
+      <div>08 / 09</div>
+      <div>Locully · Sales Brief</div>
+    </div>
+  </section>
+
+  <!-- ============== SLIDE 9: CTA ============== -->
+  <section class="s-cta" data-screen-label="09 CTA">
+    <div class="chrome-top">
+      <div class="logo"><span class="logo-mark"></span>Locully</div>
+      <div>09 — Next step</div>
+    </div>
+
+    <div class="center">
+      <div class="eyebrow" style="margin-bottom: 36px;">One question</div>
+      <h1 class="ask">Are you<br/>on <em>ChatGPT</em><span class="q">?</span></h1>
+
+      <div class="prompt-bar">
+        <span class="chev">›</span>
+        <span class="typed">best [your category] in [your city]</span>
+        <span class="blink-cursor" style="background: var(--ink);"></span>
+      </div>
+
+      <div class="row">
+        <div class="lede">
+          We'll run the prompts your real customers ask, show you exactly where you appear (and where competitors are taking your seat), and map a 90-day path to becoming the cited answer.
+        </div>
+        <div class="next">
+          <div class="lbl">Free AI visibility audit</div>
+          <div class="v">locully.org</div>
+          <div class="v small ink-soft">sunny@locully.org</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-meta">
+      <div>09 / 09 — End of brief</div>
+      <div>Locully · AI Search Visibility Experts</div>
+    </div>
+  </section>
+
+</deck-stage>
+
+<script src="https://widget.senja.io/widget/e78045b1-0c17-4032-ae66-d945b9ace7b2/platform.js" type="text/javascript" async></script>
+<script src="deck-stage.js"></script>
+</body>
+</html>
