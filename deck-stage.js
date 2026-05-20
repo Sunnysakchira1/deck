@@ -42,6 +42,40 @@
       justify-content: center;
     }
 
+    /* ── Mobile: scale to height, scroll within slide horizontally ── */
+    @media (max-width: 899px) and (orientation: portrait) {
+      :host {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      :host::-webkit-scrollbar { display: none; }
+      .stage {
+        position: relative;
+        overflow: visible;
+        align-items: flex-start;
+        justify-content: flex-start;
+        width: max-content;
+        min-width: 100%;
+        height: 100%;
+        flex-shrink: 0;
+      }
+      .canvas {
+        position: relative !important;
+        flex-shrink: 0;
+        transform: none !important;
+      }
+      .tapzones { display: none !important; }
+      .overlay {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        transform: translate(-50%, 0) scale(1) !important;
+        filter: blur(0) !important;
+        bottom: 16px;
+      }
+    }
+
     .canvas {
       position: relative;
       transform-origin: center center;
@@ -230,6 +264,8 @@
       this._notes = [];
       this._hideTimer = null;
       this._mouseIdleTimer = null;
+      this._touchStartX = 0;
+      this._touchStartY = 0;
 
       this._onKey = this._onKey.bind(this);
       this._onResize = this._onResize.bind(this);
@@ -237,6 +273,8 @@
       this._onMouseMove = this._onMouseMove.bind(this);
       this._onTapBack = this._onTapBack.bind(this);
       this._onTapForward = this._onTapForward.bind(this);
+      this._onTouchStart = this._onTouchStart.bind(this);
+      this._onTouchEnd = this._onTouchEnd.bind(this);
     }
 
     get designWidth() {
@@ -253,12 +291,16 @@
       window.addEventListener('keydown', this._onKey);
       window.addEventListener('resize', this._onResize);
       window.addEventListener('mousemove', this._onMouseMove, { passive: true });
+      window.addEventListener('touchstart', this._onTouchStart, { passive: true });
+      window.addEventListener('touchend', this._onTouchEnd, { passive: true });
     }
 
     disconnectedCallback() {
       window.removeEventListener('keydown', this._onKey);
       window.removeEventListener('resize', this._onResize);
       window.removeEventListener('mousemove', this._onMouseMove);
+      window.removeEventListener('touchstart', this._onTouchStart);
+      window.removeEventListener('touchend', this._onTouchEnd);
       if (this._hideTimer) clearTimeout(this._hideTimer);
       if (this._mouseIdleTimer) clearTimeout(this._mouseIdleTimer);
     }
@@ -415,6 +457,7 @@
       const prev = this._prevIndex == null ? -1 : this._prevIndex;
       const curr = this._index;
       try { history.replaceState(null, '', '#' + (curr + 1)); } catch (e) {}
+      if (reason !== 'init') { try { this._root.host.scrollLeft = 0; } catch (e) {} }
       this._slides.forEach((s, i) => {
         if (i === curr) s.setAttribute('data-deck-active', '');
         else s.removeAttribute('data-deck-active');
@@ -455,12 +498,45 @@
       if (!this._canvas) return;
       if (this.hasAttribute('noscale')) {
         this._canvas.style.transform = 'none';
+        this._canvas.style.zoom = '';
         return;
       }
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const s = Math.min(vw / this.designWidth, vh / this.designHeight);
-      this._canvas.style.transform = `scale(${s})`;
+      const isPortraitMobile = vw < 900 && vh > vw;
+
+      if (isPortraitMobile) {
+        // Scale to fill viewport height — text is readable, slide overflows right
+        const s = (vh / this.designHeight) * 0.9;
+        this._canvas.style.transform = 'none';
+        this._canvas.style.zoom = String(s);
+        this._canvas.style.width = this.designWidth + 'px';
+        this._canvas.style.height = this.designHeight + 'px';
+      } else {
+        this._canvas.style.zoom = '';
+        const s = Math.min(vw / this.designWidth, vh / this.designHeight);
+        this._canvas.style.transform = `scale(${s})`;
+      }
+    }
+
+    _onTouchStart(e) {
+      this._touchStartX = e.touches[0].clientX;
+      this._touchStartY = e.touches[0].clientY;
+    }
+
+    _onTouchEnd(e) {
+      if (!e.changedTouches.length) return;
+      const dx = e.changedTouches[0].clientX - this._touchStartX;
+      const dy = e.changedTouches[0].clientY - this._touchStartY;
+      // Only navigate if clearly horizontal and large enough gesture
+      if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx) * 0.8) return;
+      const host = this._root.host;
+      const maxScroll = host.scrollWidth - host.clientWidth;
+      const atStart = host.scrollLeft < 8;
+      const atEnd = host.scrollLeft > maxScroll - 8;
+      // Swipe left at right edge → next; swipe right at left edge → prev
+      if (dx < 0 && atEnd) this._go(this._index + 1, 'swipe');
+      if (dx > 0 && atStart) this._go(this._index - 1, 'swipe');
     }
 
     _onResize() { this._fit(); }
