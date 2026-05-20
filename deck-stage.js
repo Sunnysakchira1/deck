@@ -42,11 +42,10 @@
       justify-content: center;
     }
 
-    /* ── Mobile: scale to height, scroll within slide horizontally ── */
-    @media (max-width: 899px) and (orientation: portrait) {
+    /* ── Mobile: zoom + scroll — works portrait AND landscape ── */
+    @media (max-width: 1024px) {
       :host {
-        overflow-x: auto;
-        overflow-y: hidden;
+        overflow: auto;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
       }
@@ -57,9 +56,9 @@
         align-items: flex-start;
         justify-content: flex-start;
         width: max-content;
+        height: max-content;
         min-width: 100%;
-        height: 100%;
-        flex-shrink: 0;
+        min-height: 100%;
       }
       .canvas {
         position: relative !important;
@@ -73,6 +72,7 @@
         transform: translate(-50%, 0) scale(1) !important;
         filter: blur(0) !important;
         bottom: 16px;
+        position: fixed;
       }
     }
 
@@ -503,11 +503,14 @@
       }
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const isPortraitMobile = vw < 900 && vh > vw;
+      const isMobile = Math.min(vw, vh) < 700;
 
-      if (isPortraitMobile) {
-        // Scale to fill viewport height — text is readable, slide overflows right
-        const s = (vh / this.designHeight) * 0.9;
+      if (isMobile) {
+        // Scale so the long edge of the device fills the long edge of the slide.
+        // In landscape: fills viewport width, small vertical overflow → vertical scroll.
+        // In portrait: fills viewport height, wide overflow → horizontal scroll.
+        const longEdge = Math.max(vw, vh);
+        const s = longEdge / this.designWidth;
         this._canvas.style.transform = 'none';
         this._canvas.style.zoom = String(s);
         this._canvas.style.width = this.designWidth + 'px';
